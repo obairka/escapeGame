@@ -57,33 +57,3 @@ class EscapeGame {
         return this.field
     }
 }
-
-function main() {
-    var field = new Field(5, 5)
-
-    var text = ""
-    for (let y = 0; y < field.height; y++) {
-        for (let x = 0; x < field.width; x++) {
-            var cell = '';
-            switch (field.getCell(x, y)) {
-                case Cell.EMPTY:
-                    cell = '_'
-                    break;
-                case Cell.WALL:
-                    cell = '#'
-                    break;
-                case Cell.PLAYER:
-                    cell = '*'
-                    break;
-                default:
-                    break;
-            }
-            text += cell
-        }
-        text += '\n'
-    }
-
-    alert(text)
-}
-
-main()
