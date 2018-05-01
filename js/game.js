@@ -4,7 +4,7 @@ class Unit {
         var self = this
         this.ready = false
         this.image = new Image()
-        this.image.onload = function() {
+        this.image.onload = function () {
             self.ready = true
         }
         this.image.src = imgPath
@@ -19,61 +19,78 @@ class Unit {
     }
 }
 
-// create canvas
-var canvas = document.createElement("canvas")
-var ctx = canvas.getContext("2d")
-canvas.width = 512
-canvas.height = 512
+var backgroundCanvas = document.getElementById("background-layer")
+var backgroundCtx = backgroundCanvas.getContext("2d")
+backgroundCanvas.width = 512;
+backgroundCanvas.height = 512;
 
-// background image
-var bgReady = false
-var bgImage = new Image()
-bgImage.onload = function () {
-    bgReady = true
-}
-bgImage.src = "images/image.png"
+var gameCanvas = document.getElementById("game-layer")
+gameCanvas.width = 512;
+gameCanvas.height = 512;
+var ctx = gameCanvas.getContext("2d")
 
 var hero = new Unit("images/hero.png", 32, 32)
 
-var tileSize = 64;
-var game = new EscapeGame(canvas.width / tileSize, canvas.height / tileSize)
+
+addEventListener("keydown", function (e) {
+    update(e.keyCode)
+}, false);
+
+var tileSize = 32;
+var game = new EscapeGame(gameCanvas.width / tileSize, gameCanvas.height / tileSize)
 var field = game.getField()
+field.setCell(5, 5, Cell.WALL)
+
+game.onChanged = function () {
+    render()
+}
 
 function renderField() {
     for (var i = 0; i < field.height; ++i)
-    for (var j = 0; j < field.width; ++j)
-    {
-        var y = i * tileSize;
-        var x = j * tileSize;
+        for (var j = 0; j < field.width; ++j) {
+            var y = i * tileSize;
+            var x = j * tileSize;
 
-        var cell = field.getCell(j, i)
-        if (cell === Cell.WALL) {
-            ctx.fillRect(x, y, tileSize, tileSize);
+            var cell = field.getCell(j, i)
+            if (cell === Cell.WALL) {
+                backgroundCtx.fillRect(x, y, tileSize, tileSize);
+            }
+            else {
+                backgroundCtx.rect(x, y, tileSize, tileSize);
+            }
+            backgroundCtx.stroke();
         }
-        else {
-            ctx.rect(x, y, tileSize, tileSize);
-        }
-        ctx.stroke();
-    }
-}
-
-var reset = function () {
-    hero.x = canvas.width / 2
-    hero.y = canvas.height / 2
 }
 
 var render = function () {
-    
+    ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
     if (hero.ready) {
+        hero.x = game.player.x * tileSize;
+        hero.y = game.player.y * tileSize;
         hero.render(ctx)
     }
 }
+
+var update = function (keyCode) {
+    if (38 == keyCode) { // Player holding up
+        game.movePlayer(MovementDirection.DOWN)
+    }
+    if (40== keyCode) { // Player holding down
+        game.movePlayer(MovementDirection.UP)
+    }
+    if (37== keyCode) { // Player holding left
+        game.movePlayer(MovementDirection.LEFT)
+    }
+    if (39 == keyCode) { // Player holding right
+        game.movePlayer(MovementDirection.RIGHT)
+    }
+};
 
 var main = function () {
     var now = Date.now()
     var delta = now - then
 
-    //update(delta / 1000)
+    update()
     render()
     then = now
 
@@ -82,12 +99,7 @@ var main = function () {
 
 var then = Date.now()
 
-window.onload = function(){
-    document.body.appendChild(canvas)
-    if (bgReady) {
-        ctx.drawImage(bgImage, 0, 0)
-    }
+window.onload = function () {
     renderField()
-    reset()
     main()
 }
