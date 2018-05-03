@@ -36,7 +36,8 @@ class EscapeGame {
 
     constructor(height, width) {
         this.field = new Field(height, width)
-        this.player = new Player(2, 2)
+        this.player = new Player(1, 1)
+        this.fogOfWarField = new FogOfWarField(this.field)
         this.onChanged = function () { }
     }
 
@@ -62,6 +63,8 @@ class EscapeGame {
         if (this.field.getCell(pos.x, pos.y) == Cell.EMPTY) {
             this.player.x = pos.x
             this.player.y = pos.y
+            this.fogOfWarField.setPlayerPosition(pos.x, pos.y)
+            this.fogOfWarField.setPlayerMovementDirection(direction)
             return true
         }
         return false
@@ -87,6 +90,64 @@ class MazeGenerator {
     }
 }
 
+class FogOfWarField {
+
+    constructor(field) {
+        this.field = field
+        this.playerX = 0
+        this.playerY = 0
+        this.playerDirection = MovementDirection.RIGHT
+    }
+
+    setPlayerPosition(x, y) {
+        this.playerX = x
+        this.playerY = y
+    }
+
+    setPlayerMovementDirection(direction) {
+        this.playerDirection = direction
+    }
+
+    isCellVisible(x, y) {
+        let roundVisibility = distanceBetween(this.playerX, this.playerY, x, y) <= 2.0
+        let directVisibilityDistance = 5
+        let diffY = getNextPosition(this.playerX, this.playerY, this.playerDirection).y - this.playerY
+        if (x == this.playerX
+            && diffY != 0
+            && (y - this.playerY) / diffY > 0
+            && Math.abs(y - this.playerY) <= directVisibilityDistance) {
+
+            let dist = getDirectVisibilityDistance(this.field, this.playerX, this.playerY, this.playerDirection, directVisibilityDistance)
+            return dist >= Math.abs(y - this.playerY)
+        }
+        let diffX = getNextPosition(this.playerX, this.playerY, this.playerDirection).x - this.playerX
+        if (y == this.playerY 
+            && diffX != 0
+            && (x - this.playerX) / diffX > 0
+            && Math.abs(x - this.playerX) <= directVisibilityDistance) {
+            
+            let dist = getDirectVisibilityDistance(this.field, this.playerX, this.playerY, this.playerDirection, directVisibilityDistance)
+            return dist >= Math.abs(x - this.playerX)
+        }
+        return roundVisibility
+    }
+}
+
+function getDirectVisibilityDistance(field, x, y, direction, maxDistance) {
+    let currentPos = { x: x, y: y }
+    let distance = 0
+    for (let i = 0; i <= maxDistance; i++) {
+        let pos = getNextPosition(currentPos.x, currentPos.y, direction)
+        if (field.getCell(pos.x, pos.y) != Cell.WALL) {
+            distance++
+            currentPos = pos
+        } else {
+            return distance
+        }
+    }
+    return distance
+}
+
 function getNextPosition(x, y, direction) {
     switch (direction) {
         case MovementDirection.UP:
@@ -98,6 +159,10 @@ function getNextPosition(x, y, direction) {
         case MovementDirection.RIGHT:
             return { x: x + 1, y: y }
     }
+}
+
+function distanceBetween(x, y, x1, y1) {
+    return Math.sqrt((x - x1) * (x - x1) + (y - y1) * (y - y1))
 }
 
 var MovementDirection = {
