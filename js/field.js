@@ -8,35 +8,19 @@ class Field {
         for (let i = 0; i < width * height; i++) {
             this.field[i] = Cell.EMPTY
         }
-        for (let i = 0; i < width; i++) {
-            this.setCell(i, 0, Cell.WALL)
-            this.setCell(i, height - 1, Cell.WALL)
-        }
-        for (let i = 0; i < height; i++) {
-            this.setCell(0, i, Cell.WALL)
-            this.setCell(width - 1, i, Cell.WALL)
-        }
+        new MazeGenerator().generate(this, 0, 0, 0, 0)
     }
 
     getCell(x, y) {
-        if (x == this.playerX && y == this.playerY) {
-            return Cell.PLAYER
-        } else {
-            return this.field[y * this.width + x]
-        }
+        return this.field[y * this.width + x]
     }
 
     setCell(x, y, value) {
         this.field[y * this.width + x] = value
     }
 
-    setPlayerPosition(x, y) {
-        this.playerX = x
-        this.playerY = y
-    }
-
     isInBound(x, y) {
-        return x >= 0 && x < this.width && y >= 0 && y < this.height    
+        return x >= 0 && x < this.width && y >= 0 && y < this.height
     }
 }
 
@@ -53,7 +37,6 @@ class EscapeGame {
     constructor(height, width) {
         this.field = new Field(height, width)
         this.player = new Player(2, 2)
-        this.updatePlayerPosition()
         this.onChanged = function () { }
     }
 
@@ -63,17 +46,12 @@ class EscapeGame {
 
     movePlayer(direction) {
         if (this.tryMovePlayer(direction)) {
-            this.updatePlayerPosition()
             this.onChanged.call()
         }
     }
 
     getField() {
         return this.field
-    }
-
-    updatePlayerPosition() {
-        this.field.setPlayerPosition(this.player.x, this.player.y)
     }
 
     tryMovePlayer(direction) {
@@ -87,6 +65,25 @@ class EscapeGame {
             return true
         }
         return false
+    }
+}
+
+class MazeGenerator {
+
+    generate(field, fromX, fromY, toX, toY) {
+        for (let i = 0; i < field.width; i++) {
+            field.setCell(i, 0, Cell.WALL)
+            field.setCell(i, field.height - 1, Cell.WALL)
+        }
+        for (let i = 0; i < field.height; i++) {
+            field.setCell(0, i, Cell.WALL)
+            field.setCell(field.width - 1, i, Cell.WALL)
+        }
+        for (let i = 0; i < field.width; i = i + 2) {
+            for (let j = 0; j < field.height; j = j + 2) {
+                field.setCell(i, j, Cell.WALL)
+            }
+        }
     }
 }
 
